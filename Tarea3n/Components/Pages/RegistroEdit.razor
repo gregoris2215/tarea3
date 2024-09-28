@@ -1,0 +1,63 @@
+@page "/registro/nuevos"
+@rendermode InteractiveServer 
+@inject NavigationManager NavMan
+@inject IJSRuntime JSx
+@using System.Text.Json
+
+<h3>Datos de registro</h3>
+
+<EditForm Model="@reporte" OnValidSubmit="@GuardarRegistro">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label for="fecha" class="form-label">Fecha</label>
+        <InputDate id="fecha" class="form-control" @bind-Value="@reporte.Fecha" />
+        <ValidationMessage For="@(() => reporte.Fecha)" />
+    </div>
+
+    <div class="mb-3">
+        <label for="descripcion" class="form-label">Descripción</label>
+        <InputTextArea id="descripcion" class="form-control" @bind-Value="@reporte.Descripcion" />
+        <ValidationMessage For="@(() => reporte.Descripcion)" />
+    </div>
+    
+    <div class="mb-3">
+        <label for="CostoEstimado" class="form-label">Costo</label>
+        <InputTextArea id="CostoEstimado" class="form-control" @bind-Value="@reporte.CostoEstimado" />
+        <ValidationMessage For="@(() => reporte.CostoEstimado)" />
+    </div>
+
+    <div class="text-center">
+        <button type="submit" class="btn btn-primary">Guardar</button>
+    </div>
+</EditForm>
+
+@code {
+    public Reporte reporte = new Reporte { Descripcion = string.Empty };
+
+    List<Reporte> registros = new List<Reporte>();
+
+    private async Task GuardarRegistro()
+    {
+        // Cargar registros existentes desde localStorage
+        var registrosJson = await JSx.InvokeAsync<string>("localStorage.getItem", "registros");
+        if (!string.IsNullOrEmpty(registrosJson))
+        {
+            var registrosDeserialized = JsonSerializer.Deserialize<List<Reporte>>(registrosJson);
+            if (registrosDeserialized != null)
+            {
+                registros = registrosDeserialized;
+            }
+        }
+
+        // Agregar el nuevo registro a la lista
+        registros.Add(reporte);
+
+        // Guardar la lista actualizada en localStorage
+        await JSx.InvokeVoidAsync("localStorage.setItem", "registros", JsonSerializer.Serialize(registros));
+
+        // Navegar a la página de registros
+        NavMan.NavigateTo("registro");
+    }
+}
